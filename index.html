@@ -179,8 +179,9 @@
       </div>
       <div class="row2">
         <div><label class="field-label">Score obtained</label><input type="number" id="manual-score" min="0" placeholder="e.g. 42"></div>
-        <div><label class="field-label">Out of</label><input type="number" id="manual-max" min="1" placeholder="e.g. 64"></div>
+        <div><label class="field-label">Out of (auto)</label><input type="number" id="manual-max" min="1" placeholder="e.g. 64"></div>
         <div><button class="primary" id="manual-save-btn">Save score</button></div>
+        <div><button class="ghost" id="manual-cancel-btn" style="display:none;">Cancel edit</button></div>
       </div>
       <div class="status" id="manual-status"></div>
     </div>
@@ -253,6 +254,7 @@ function getQuestions(phase){
 let answerKey = {};
 let studentAnswers = {};
 let roster = [];
+let manualEditId = null;
 
 function escapeHtml(s){
   return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -340,6 +342,7 @@ async function loadAnswerKey(){
     if(res && res.ok && res.value) answerKey = res.value;
   }catch(e){ /* not set yet */ }
   renderKeyForm();
+  updateManualMax();
 }
 
 document.getElementById('save-key-btn').addEventListener('click', async () => {
@@ -355,6 +358,7 @@ document.getElementById('save-key-btn').addEventListener('click', async () => {
     const res = await apiPost('saveAnswerKey', { value: newKey });
     if(!res || !res.ok) throw new Error('save failed');
     answerKey = newKey;
+    updateManualMax();
     statusEl.textContent = 'Saved. Students will now be marked against this key.';
   }catch(e){
     statusEl.textContent = 'Could not save the answer key. Check your Apps Script URL and try again.';
@@ -481,6 +485,34 @@ document.getElementById('save-attendance-btn').addEventListener('click', async (
   }
 });
 
+function computeMaxTotal(phase){
+  return getQuestions(phase).reduce((sum, q) => {
+    const pts = (answerKey[q.id] && answerKey[q.id].pts) || q.pts;
+    return sum + pts;
+  }, 0);
+}
+
+function updateManualMax(){
+  const phase = document.querySelector('input[name="manual-phase"]:checked').value;
+  document.getElementById('manual-max').value = computeMaxTotal(phase);
+}
+
+document.querySelectorAll('input[name="manual-phase"]').forEach(r => {
+  r.addEventListener('change', updateManualMax);
+});
+
+document.getElementById('manual-cancel-btn').addEventListener('click', () => {
+  manualEditId = null;
+  document.getElementById('manual-name').value = '';
+  document.getElementById('manual-score').value = '';
+  document.getElementById('manual-max').value = '';
+  document.getElementById('manual-save-btn').textContent = 'Save score';
+  document.getElementById('manual-cancel-btn').style.display = 'none';
+  document.getElementById('manual-status').textContent = '';
+  document.getElementById('manual-status').className = 'status';
+  updateManualMax();
+});
+
 document.getElementById('manual-save-btn').addEventListener('click', async () => {
   const statusEl = document.getElementById('manual-status');
   const name = document.getElementById('manual-name').value.trim();
@@ -494,13 +526,19 @@ document.getElementById('manual-save-btn').addEventListener('click', async () =>
   }
   statusEl.textContent = 'Saving…'; statusEl.className = 'status';
   try{
-    const id = newId();
+    const id = manualEditId || newId();
+    const wasEdit = !!manualEditId;
     const res = await apiPost('saveManualResult', {
       id, name, phase, date: new Date().toISOString(),
       total: score, maxTotal: max
     });
     if(!res || !res.ok) throw new Error('save failed');
-    statusEl.textContent = `Saved ${name}'s ${phase}-test score.`;
+    statusEl.textContent = wasEdit
+      ? `Updated ${name}'s ${phase}-test score.`
+      : `Saved ${name}'s ${phase}-test score.`;
+    manualEditId = null;
+    document.getElementById('manual-save-btn').textContent = 'Save score';
+    document.getElementById('manual-cancel-btn').style.display = 'none';
     document.getElementById('manual-name').value = '';
     document.getElementById('manual-score').value = '';
     document.getElementById('manual-max').value = '';
@@ -572,7 +610,7 @@ async function loadResults(){
 
       <p class="section-h">All graded submissions</p>
       <table class="subs">
-        <thead><tr><th>Name</th><th>Phase</th><th>Score</th><th>%</th><th>Date</th></tr></thead>
+        <thead><tr><th>Name</th><th>Phase</th><th>Score</th><th>%</th><th>Date</th><th></th></tr></thead>
         <tbody>
           ${graded.map((s,i) => `
             <tr data-idx="${i}">
@@ -581,6 +619,7 @@ async function loadResults(){
               <td>${s.total}/${s.maxTotal}</td>
               <td>${s.pct}%</td>
               <td>${new Date(s.date).toLocaleDateString()}</td>
+              <td><button class="ghost edit-score-btn" data-idx="${i}" style="padding:5px 10px; font-size:0.78rem;">Edit score</button></td>
             </tr>
           `).join('')}
         </tbody>
@@ -607,6 +646,23 @@ async function loadResults(){
     if(gradeAllBtn) gradeAllBtn.addEventListener('click', () => runGrading(pending.map(p => p.id), gradeAllBtn));
     document.querySelectorAll('.grade-one-btn').forEach(b => {
       b.addEventListener('click', () => runGrading([b.dataset.id], b));
+    });
+
+    document.querySelectorAll('.edit-score-btn').forEach(b => {
+      b.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const s = graded[Number(b.dataset.idx)];
+        manualEditId = s.id;
+        document.getElementById('manual-name').value = s.name;
+        document.querySelector(`input[name="manual-phase"][value="${s.phase === 'post' ? 'post' : 'pre'}"]`).checked = true;
+        document.getElementById('manual-score').value = s.total;
+        document.getElementById('manual-max').value = s.maxTotal;
+        document.getElementById('manual-save-btn').textContent = 'Update score';
+        document.getElementById('manual-cancel-btn').style.display = 'inline-block';
+        document.getElementById('manual-status').textContent = `Editing ${s.name}'s ${s.phase === 'post' ? 'post' : 'pre'}-test score — change the numbers and click Update score.`;
+        document.getElementById('manual-status').className = 'status';
+        document.querySelector('.settings-block').scrollIntoView({ behavior: 'smooth' });
+      });
     });
 
     el.querySelectorAll('tr[data-idx]').forEach(row => {
