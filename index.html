@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSAU B.T.C Pre &amp; Post-Training Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFE9D8; --paper-dark:#E4DCC4; --ink:#242019; --ink-soft:#5B5546;
+    --green:#1F5C3F; --green-dark:#153E2B; --gold:#B0812C; --rust:#9C4A2E;
+    --rule:#C9BFA0; --white:#FBF9F1;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Public Sans', sans-serif; line-height:1.5; }
+  .wrap{ max-width:700px; margin:0 auto; padding:32px 20px 80px; }
+  header.page{ border-bottom:2px solid var(--ink); padding-bottom:18px; margin-bottom:8px; }
+  header.page h1{ font-family:'Lora', serif; font-weight:700; font-size:1.6rem; margin:0 0 4px; letter-spacing:-0.01em; }
+  header.page p{ margin:0; color:var(--ink-soft); font-size:0.92rem; }
+  nav.tabs{ display:flex; gap:2px; margin:22px 0 28px; border-bottom:1px solid var(--rule); flex-wrap:wrap; }
+  nav.tabs button{ font-family:'Public Sans', sans-serif; font-size:0.88rem; font-weight:600; padding:10px 14px; border:none; background:none; color:var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
+  nav.tabs button.active{ color:var(--green-dark); border-bottom:2px solid var(--green); }
+  section.panel{ display:none; }
+  section.panel.active{ display:block; }
+  .qitem{ display:flex; gap:12px; padding:16px 0; border-bottom:1px solid var(--rule); }
+  .qnum{ font-family:'Lora', serif; font-weight:600; color:var(--green-dark); min-width:28px; padding-top:2px; }
+  .qbody{ flex:1; }
+  .qtext{ font-size:0.98rem; margin:0 0 8px; }
+  .qtext .sub{ display:block; margin-left:14px; color:var(--ink-soft); }
+  textarea, input[type=text], input[type=number], input[type=date]{
+    width:100%; font-family:'Public Sans', sans-serif; font-size:0.92rem; padding:9px 10px;
+    border:1px solid var(--rule); border-radius:3px; background:var(--white); color:var(--ink); resize:vertical;
+  }
+  textarea{ min-height:56px; }
+  label.field-label{ display:block; font-size:0.76rem; color:var(--ink-soft); margin:0 0 3px; }
+  .row2{ display:flex; gap:10px; align-items:flex-end; }
+  .row2 .grow{ flex:1; }
+  .row2 .pts{ width:78px; }
+  button.primary{ font-family:'Public Sans', sans-serif; font-weight:700; font-size:0.94rem; background:var(--green); color:var(--white); border:none; padding:12px 22px; border-radius:3px; cursor:pointer; }
+  button.primary:hover{ background:var(--green-dark); }
+  button.primary:disabled{ background:#9AA69E; cursor:default; }
+  button.ghost{ font-family:'Public Sans', sans-serif; font-weight:600; font-size:0.86rem; background:none; color:var(--green-dark); border:1px solid var(--green-dark); padding:9px 16px; border-radius:3px; cursor:pointer; }
+  .name-field{ margin-bottom:20px; }
+  .phase-toggle{ display:flex; gap:18px; font-size:0.9rem; }
+  .phase-toggle label{ display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .phase-toggle input{ width:auto; accent-color:var(--green); }
+  .settings-block{ background:var(--white); border:1px solid var(--rule); border-radius:4px; padding:16px; margin-bottom:24px; }
+  .settings-block h3{ font-family:'Lora', serif; font-size:1rem; margin:0 0 4px; }
+  .settings-block p{ font-size:0.84rem; color:var(--ink-soft); margin:0 0 10px; }
+  .improve-table{ width:100%; border-collapse:collapse; font-size:0.9rem; margin-bottom:26px; }
+  .improve-table th{ text-align:left; font-family:'Lora', serif; font-weight:600; color:var(--ink-soft); font-size:0.8rem; padding:6px 8px; border-bottom:1px solid var(--ink); }
+  .improve-table td{ padding:9px 8px; border-bottom:1px solid var(--rule); }
+  .improve-up{ color:var(--green-dark); font-weight:700; }
+  .improve-down{ color:var(--rust); font-weight:700; }
+  .improve-flat{ color:var(--ink-soft); }
+  .section-h{ font-family:'Lora', serif; font-weight:600; font-size:1.05rem; margin:0 0 10px; }
+  .status{ font-size:0.85rem; color:var(--ink-soft); margin-top:10px; }
+  .status.err{ color:var(--rust); }
+  .marked{ position:relative; padding-right:64px; }
+  .mark-note{ font-family:'Lora', serif; font-style:italic; color:var(--rust); font-size:0.86rem; margin-top:6px; padding-left:10px; border-left:2px solid var(--rust); }
+  .mark-score{ position:absolute; top:14px; right:0; width:46px; height:46px; border:2px solid var(--rust); border-radius:50%; display:flex; align-items:center; justify-content:center; transform:rotate(-8deg); font-family:'Lora', serif; font-weight:700; color:var(--rust); font-size:0.9rem; }
+  .score-banner{ background:var(--green-dark); color:var(--white); border-radius:4px; padding:20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
+  .score-banner .big{ font-family:'Lora', serif; font-size:1.6rem; font-weight:700; }
+  .score-banner .lbl{ font-size:0.82rem; opacity:0.85; }
+  table.subs{ width:100%; border-collapse:collapse; font-size:0.9rem; }
+  table.subs th{ text-align:left; font-family:'Lora', serif; font-weight:600; color:var(--ink-soft); font-size:0.8rem; padding:6px 8px; border-bottom:1px solid var(--ink); }
+  table.subs td{ padding:9px 8px; border-bottom:1px solid var(--rule); cursor:pointer; }
+  table.subs tr:hover td{ background:var(--paper-dark); }
+  .empty{ color:var(--ink-soft); font-style:italic; padding:30px 0; text-align:center; }
+  .detail-block{ margin-top:14px; padding:14px; background:var(--white); border:1px solid var(--rule); border-radius:4px; }
+  .roster-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--rule); font-size:0.92rem; }
+  .present-toggle{ display:flex; gap:14px; font-size:0.86rem; }
+  .present-toggle label{ display:flex; align-items:center; gap:5px; cursor:pointer; }
+  .present-toggle input{ width:auto; accent-color:var(--green); }
+  .stat-cards{ display:flex; gap:14px; margin-bottom:26px; flex-wrap:wrap; }
+  .stat-card{ flex:1; min-width:140px; background:var(--white); border:1px solid var(--rule); border-radius:4px; padding:14px 16px; }
+  .stat-card .num{ font-family:'Lora', serif; font-weight:700; font-size:1.6rem; color:var(--green-dark); }
+  .stat-card .lbl{ font-size:0.78rem; color:var(--ink-soft); }
+  .bar-row{ margin-bottom:10px; }
+  .bar-row .bar-label{ display:flex; justify-content:space-between; font-size:0.84rem; margin-bottom:3px; color:var(--ink-soft); }
+  .bar-track{ background:var(--paper-dark); border-radius:3px; height:10px; overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:3px; background:var(--green); }
+  .bar-fill.weak{ background:var(--rust); }
+  .setup-banner{ background:#F6E9D7; border:1px solid var(--gold); border-radius:4px; padding:14px 16px; margin-bottom:20px; font-size:0.88rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <h1>B.T.C Pre &amp; Post-Training Test</h1>
+    <p>The Muslim Students' Association of Uganda — Leadership Training Series 2026, auto-marking form</p>
+  </header>
+
+  <div id="setup-banner" class="setup-banner" style="display:none;">
+    This page isn't connected to a backend yet. Open the file, find the line
+    <code>const APPS_SCRIPT_URL = "PASTE_YOUR_URL_HERE";</code> near the top of the script, and replace it with your
+    Apps Script Web App URL, then re-publish to GitHub.
+  </div>
+
+  <nav class="tabs">
+    <button data-tab="key" class="active">Answer key</button>
+    <button data-tab="test">Take test</button>
+    <button data-tab="attendance">Attendance</button>
+    <button data-tab="results">Results</button>
+    <button data-tab="dashboard">Dashboard</button>
+  </nav>
+
+  <section class="panel active" id="panel-key">
+    <p style="color:var(--ink-soft); font-size:0.9rem; margin-top:-8px;">
+      Fill in the model answer or marking points for each question before students take the test.
+    </p>
+    <div id="key-list"></div>
+    <button class="primary" id="save-key-btn" style="margin-top:16px;">Save answer key</button>
+    <div class="status" id="key-status"></div>
+  </section>
+
+  <section class="panel" id="panel-test">
+    <div class="name-field">
+      <label class="field-label">Your full name</label>
+      <input type="text" id="student-name" placeholder="e.g. Amina Nakato">
+    </div>
+    <div class="name-field">
+      <label class="field-label">Which sitting is this?</label>
+      <div class="phase-toggle">
+        <label><input type="radio" name="phase" value="pre" checked> Pre-test (before training)</label>
+        <label><input type="radio" name="phase" value="post"> Post-test (after training)</label>
+      </div>
+    </div>
+    <div id="test-list"></div>
+    <button class="primary" id="submit-test-btn" style="margin-top:10px;">Submit answers</button>
+    <div class="status" id="test-status"></div>
+    <div id="test-results"></div>
+  </section>
+
+  <section class="panel" id="panel-attendance">
+    <div class="name-field">
+      <label class="field-label">Session</label>
+      <input type="text" id="session-name" placeholder="e.g. Day 1 — Morning session">
+    </div>
+    <div class="name-field">
+      <label class="field-label">Date</label>
+      <input type="date" id="session-date">
+    </div>
+    <div class="name-field">
+      <label class="field-label">Add a name to the roster</label>
+      <div class="row2">
+        <div class="grow"><input type="text" id="roster-add-input" placeholder="Full name"></div>
+        <div><button class="ghost" id="roster-add-btn">Add</button></div>
+      </div>
+    </div>
+    <p class="section-h">Mark attendance</p>
+    <div id="roster-list"></div>
+    <button class="primary" id="save-attendance-btn" style="margin-top:16px;">Save attendance</button>
+    <div class="status" id="attendance-status"></div>
+  </section>
+
+  <section class="panel" id="panel-results">
+    <p style="color:var(--ink-soft); font-size:0.9rem; margin-top:-8px;">
+      Students only submit raw answers — grading happens here, whenever you open this tab.
+    </p>
+    <div id="results-body"><div class="empty">Loading submissions…</div></div>
+  </section>
+
+  <section class="panel" id="panel-dashboard">
+    <div id="dashboard-body"><div class="empty">Loading dashboard…</div></div>
+  </section>
+</div>
+
+<script>
+// ─── Configure this before publishing ───────────────────────────────
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXnUVKAb9sXAkaNZnQZWeLMxkUZBFbG7yPHhDYpZbf6XgqEvh4S0KvGhRiCDlveFIT/exec";
+// ──────────────────────────────────────────────────────────────────────
+
+const BASE_QUESTIONS = [
+  {id:"1", n:1, text:"Write MSAU in full.", pts:2},
+  {id:"2", n:2, text:"Write seven Cardinal objectives of MSAU.", pts:4},
+  {id:"3", n:3, text:"Write the Vision and Mission of MSAU.", pts:2},
+  {id:"4", n:4, text:"State the MSAU core values.", pts:2},
+  {id:"5", n:5, text:"State the MSAU method of work.", pts:2},
+  {id:"6", n:6, text:"State the MSAU philosophy.", pts:2},
+  {id:"7", n:7, text:"How many articles are in MSAU National Constitution?", pts:1},
+  {id:"8", n:8, text:"What are the objectives of conducting leadership training?", pts:2},
+  {id:"9", n:9, text:"What do we expect out of the leadership training workshop?", pts:2},
+  {id:"10", n:10, text:"Give a brief account on the history of MSAU.", pts:3},
+  {id:"11", n:11, text:"Write 6 basic rules observed during the training workshop.", pts:3},
+  {id:"12", n:12, text:"Give 5 reasons why physical fitness in student camps.", pts:3},
+  {id:"13", n:13, text:"State the categories of people that make up the Governing Council.", pts:2},
+  {id:"14", n:14, text:"State the composition of the NEC.", pts:2},
+  {id:"15", n:15, text:"Write down the composition of the REC.", pts:2},
+  {id:"16", n:16, text:"What is the role of the Governing Council?", pts:2},
+  {id:"17", n:17, text:"What is the role of the delegates' conference?", pts:2},
+  {id:"18", n:18, text:"What is the role of the Regional Patron?", pts:2},
+  {id:"19", n:19, text:"Mention the basic resources of MSAU.", pts:2},
+  {id:"20", n:20, text:"Give the election calendar of the different MSAU structures.", pts:2},
+  {id:"21", n:21, text:"What is the primary role of the REC?", pts:2},
+  {id:"22", n:22, text:"What are the objectives of organizing the following activities:", sub:["Community outreaches","Seminar","Sisters Convention"], pts:3},
+  {id:"23", n:23, text:"In the MSAU system, who is a knowledgeable leader?", pts:2},
+  {id:"24", n:24, text:"In the MSAU system, what is time management?", pts:2},
+  {id:"25", n:25, text:"When we say Think outside the box, what do we mean?", pts:2},
+  {id:"26", n:26, text:"Give five characteristics of a difficult person.", pts:3},
+  {id:"27", n:27, text:"What is the difference between a concept paper and a report?", pts:2},
+  {id:"28", n:28, text:"Write 5 key features to ensure having effective REC meetings.", pts:3},
+  {id:"29", n:29, text:"What is the implication of the DOS concept for MSAU leaders?", pts:2}
+];
+
+const PRE_TAIL = [
+  {id:"p30", n:30, text:"What 5 things do you expect to learn from the camp?", pts:2},
+  {id:"p31", n:31, text:"Write the first 10 names of Allah.", pts:2},
+  {id:"p32", n:32, text:"Write your personal Dawah agenda.", pts:2}
+];
+
+const POST_TAIL = [
+  {id:"q30", n:30, text:"What 3 things have not gone on well within or during the camp?", pts:2},
+  {id:"q31", n:31, text:"What 3 things have you liked most during the camp?", pts:2},
+  {id:"q32", n:32, text:"What 40 things have you learnt from the camp?", pts:3},
+  {id:"q33", n:33, text:"Write the first 10 names of Allah.", pts:2},
+  {id:"q34", n:34, text:"Write your personal daily Dawah agenda.", pts:2},
+  {id:"q35", n:35, text:"Suggest 5 challenges affecting training participants' turn-up and possible solutions.", pts:3}
+];
+
+function getQuestions(phase){
+  return BASE_QUESTIONS.concat(phase === 'post' ? POST_TAIL : PRE_TAIL);
+}
+
+let answerKey = {};
+let studentAnswers = {};
+let roster = [];
+
+function escapeHtml(s){
+  return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function slug(s){
+  return (s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+}
+function newId(){
+  return (crypto.randomUUID ? crypto.randomUUID() : (Date.now()+'-'+Math.random().toString(36).slice(2)));
+}
+
+async function apiGet(action, params){
+  const q = new URLSearchParams({ action, ...(params||{}) });
+  const res = await fetch(`${APPS_SCRIPT_URL}?${q.toString()}`);
+  return res.json();
+}
+async function apiPost(action, body){
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action, ...body })
+  });
+  return res.json();
+}
+
+if(APPS_SCRIPT_URL === "PASTE_YOUR_URL_HERE"){
+  document.getElementById('setup-banner').style.display = 'block';
+}
+
+function keyItemHtml(q){
+  return `
+    <div class="qitem">
+      <div class="qnum">${q.n}.</div>
+      <div class="qbody">
+        <p class="qtext">${escapeHtml(q.text)}${q.sub ? q.sub.map(s=>`<span class="sub">${escapeHtml(s)}</span>`).join('') : ''}</p>
+        <div class="row2">
+          <div class="grow">
+            <label class="field-label">Model answer / marking points</label>
+            <textarea data-id="${q.id}" class="key-input" placeholder="What should a good answer include?">${escapeHtml((answerKey[q.id]&&answerKey[q.id].model)||'')}</textarea>
+          </div>
+          <div class="pts">
+            <label class="field-label">Max points</label>
+            <input type="number" min="1" class="key-pts" data-id="${q.id}" value="${(answerKey[q.id]&&answerKey[q.id].pts)||q.pts}">
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderKeyForm(){
+  const el = document.getElementById('key-list');
+  el.innerHTML = `
+    <p class="section-h">Shared questions (asked in both pre and post test)</p>
+    ${BASE_QUESTIONS.map(keyItemHtml).join('')}
+    <p class="section-h" style="margin-top:20px;">Pre-test only</p>
+    ${PRE_TAIL.map(keyItemHtml).join('')}
+    <p class="section-h" style="margin-top:20px;">Post-test only</p>
+    ${POST_TAIL.map(keyItemHtml).join('')}
+  `;
+}
+
+function renderTestForm(){
+  const phase = document.querySelector('input[name="phase"]:checked').value;
+  const questions = getQuestions(phase);
+  const el = document.getElementById('test-list');
+  el.innerHTML = questions.map(q => `
+    <div class="qitem">
+      <div class="qnum">${q.n}.</div>
+      <div class="qbody">
+        <p class="qtext">${escapeHtml(q.text)}${q.sub ? q.sub.map(s=>`<span class="sub">${escapeHtml(s)}</span>`).join('') : ''}</p>
+        <textarea data-id="${q.id}" class="answer-input" placeholder="Your answer">${escapeHtml(studentAnswers[q.id]||'')}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.querySelectorAll('input[name="phase"]').forEach(r => {
+  r.addEventListener('change', renderTestForm);
+});
+
+async function loadAnswerKey(){
+  try{
+    const res = await apiGet('getAnswerKey');
+    if(res && res.ok && res.value) answerKey = res.value;
+  }catch(e){ /* not set yet */ }
+  renderKeyForm();
+}
+
+document.getElementById('save-key-btn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('key-status');
+  statusEl.textContent = 'Saving…'; statusEl.className = 'status';
+  const newKey = {};
+  document.querySelectorAll('.key-input').forEach(ta => {
+    const id = ta.dataset.id;
+    const ptsInput = document.querySelector(`.key-pts[data-id="${id}"]`);
+    newKey[id] = { model: ta.value.trim(), pts: Number(ptsInput.value) || 2 };
+  });
+  try{
+    const res = await apiPost('saveAnswerKey', { value: newKey });
+    if(!res || !res.ok) throw new Error('save failed');
+    answerKey = newKey;
+    statusEl.textContent = 'Saved. Students will now be marked against this key.';
+  }catch(e){
+    statusEl.textContent = 'Could not save the answer key. Check your Apps Script URL and try again.';
+    statusEl.className = 'status err';
+  }
+});
+
+document.getElementById('submit-test-btn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('test-status');
+  const resultsEl = document.getElementById('test-results');
+  resultsEl.innerHTML = '';
+  const name = document.getElementById('student-name').value.trim();
+  const phase = document.querySelector('input[name="phase"]:checked').value;
+  if(!name){
+    statusEl.textContent = 'Please enter your name before submitting.';
+    statusEl.className = 'status err';
+    return;
+  }
+  document.querySelectorAll('.answer-input').forEach(ta => {
+    studentAnswers[ta.dataset.id] = ta.value.trim();
+  });
+  const questions = getQuestions(phase);
+  const unanswered = questions.filter(q => !studentAnswers[q.id]).length;
+
+  const btn = document.getElementById('submit-test-btn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  statusEl.textContent = 'Submitting your answers…'; statusEl.className = 'status';
+
+  try{
+    const id = newId();
+    const record = {
+      id, name, phase, date: new Date().toISOString(),
+      answers: questions.map(q => ({ id: q.id, n: q.n, question: q.text, answer: studentAnswers[q.id] || '' }))
+    };
+    const res = await apiPost('saveSubmission', record);
+    if(!res || !res.ok) throw new Error('save failed');
+    resultsEl.innerHTML = `
+      <div class="score-banner">
+        <div><div class="lbl">Answers submitted</div><div class="big">Thank you, ${escapeHtml(name)}</div></div>
+      </div>
+    `;
+    statusEl.textContent = unanswered > 0
+      ? `Submitted, with ${unanswered} question(s) left blank. Your results will be shared once marking is complete.`
+      : 'Submitted. Your results will be shared once marking is complete.';
+  }catch(e){
+    statusEl.textContent = 'Something went wrong while submitting. Please try again.';
+    statusEl.className = 'status err';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Submit answers';
+  }
+});
+
+async function loadRoster(){
+  roster = [];
+  try{
+    const res = await apiGet('getRoster');
+    if(res && res.ok && res.value) roster = res.value;
+  }catch(e){}
+  try{
+    const subsRes = await apiGet('listSubmissions');
+    const subs = (subsRes && subsRes.value) || [];
+    subs.forEach(s => {
+      if(s.name && !roster.some(n => n.toLowerCase() === s.name.toLowerCase())) roster.push(s.name);
+    });
+  }catch(e){}
+  roster.sort((a,b) => a.localeCompare(b));
+  renderRoster();
+}
+
+function renderRoster(){
+  const el = document.getElementById('roster-list');
+  if(roster.length === 0){
+    el.innerHTML = '<div class="empty">No names yet. Add one above, or take a test first.</div>';
+    return;
+  }
+  el.innerHTML = roster.map(name => `
+    <div class="roster-row">
+      <span>${escapeHtml(name)}</span>
+      <div class="present-toggle">
+        <label><input type="radio" name="present-${slug(name)}" value="yes" checked> Present</label>
+        <label><input type="radio" name="present-${slug(name)}" value="no"> Absent</label>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('roster-add-btn').addEventListener('click', async () => {
+  const input = document.getElementById('roster-add-input');
+  const name = input.value.trim();
+  if(!name) return;
+  if(!roster.some(n => n.toLowerCase() === name.toLowerCase())){
+    roster.push(name);
+    roster.sort((a,b) => a.localeCompare(b));
+    try{ await apiPost('saveRoster', { value: roster }); }catch(e){}
+  }
+  input.value = '';
+  renderRoster();
+});
+
+document.getElementById('save-attendance-btn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('attendance-status');
+  const session = document.getElementById('session-name').value.trim();
+  const date = document.getElementById('session-date').value || new Date().toISOString().slice(0,10);
+  if(!session){
+    statusEl.textContent = 'Please name this session before saving.';
+    statusEl.className = 'status err';
+    return;
+  }
+  statusEl.textContent = 'Saving attendance…'; statusEl.className = 'status';
+  try{
+    const records = roster.map(name => {
+      const radios = document.getElementsByName(`present-${slug(name)}`);
+      let present = true;
+      radios.forEach(r => { if(r.checked) present = (r.value === 'yes'); });
+      return { name, present };
+    });
+    const res = await apiPost('saveAttendance', { session, date, records });
+    if(!res || !res.ok) throw new Error('save failed');
+    await apiPost('saveRoster', { value: roster });
+    statusEl.textContent = `Attendance saved for "${session}".`;
+  }catch(e){
+    statusEl.textContent = 'Something went wrong saving attendance.';
+    statusEl.className = 'status err';
+  }
+});
+
+async function loadResults(){
+  const el = document.getElementById('results-body');
+  el.innerHTML = '<div class="empty">Loading submissions…</div>';
+  try{
+    const res = await apiGet('listSubmissions');
+    const subs = (res && res.value) || [];
+    if(subs.length === 0){
+      el.innerHTML = '<div class="empty">No submissions yet.</div>';
+      return;
+    }
+    subs.sort((a,b) => new Date(b.date) - new Date(a.date));
+    const pending = subs.filter(s => s.status !== 'graded');
+    const graded = subs.filter(s => s.status === 'graded');
+
+    const byName = {};
+    graded.forEach(s => {
+      const key = s.name.trim().toLowerCase();
+      if(!byName[key]) byName[key] = { name: s.name, pre: null, post: null };
+      const phase = s.phase || 'pre';
+      if(!byName[key][phase] || new Date(s.date) > new Date(byName[key][phase].date)){
+        byName[key][phase] = s;
+      }
+    });
+    const paired = Object.values(byName).filter(r => r.pre || r.post);
+    const improveRows = paired.map(r => {
+      const prePct = r.pre ? Number(r.pre.pct) : null;
+      const postPct = r.post ? Number(r.post.pct) : null;
+      let diffCell = '<span class="improve-flat">—</span>';
+      if(prePct !== null && postPct !== null){
+        const diff = postPct - prePct;
+        const cls = diff > 0 ? 'improve-up' : diff < 0 ? 'improve-down' : 'improve-flat';
+        diffCell = `<span class="${cls}">${diff>0?'+':''}${diff}pts</span>`;
+      }
+      return `<tr><td>${escapeHtml(r.name)}</td><td>${prePct!==null?prePct+'%':'—'}</td><td>${postPct!==null?postPct+'%':'—'}</td><td>${diffCell}</td></tr>`;
+    }).join('');
+
+    el.innerHTML = `
+      <p class="section-h">Awaiting marking (${pending.length})</p>
+      ${pending.length ? `
+        <div id="pending-list">
+          ${pending.map(s => `
+            <div class="roster-row">
+              <span>${escapeHtml(s.name)} — ${s.phase === 'post' ? 'Post' : 'Pre'}-test, ${new Date(s.date).toLocaleDateString()}</span>
+              <button class="ghost grade-one-btn" data-id="${s.id}">Grade</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="primary" id="grade-all-btn" style="margin-top:14px;">Grade all pending</button>
+        <div class="status" id="grade-status"></div>
+      ` : '<div class="empty">Nothing waiting — everything submitted has been marked.</div>'}
+
+      <p class="section-h" style="margin-top:28px;">Pre → post improvement</p>
+      ${paired.length ? `
+        <table class="improve-table">
+          <thead><tr><th>Name</th><th>Pre-test</th><th>Post-test</th><th>Change</th></tr></thead>
+          <tbody>${improveRows}</tbody>
+        </table>
+      ` : '<div class="empty">No matched pre/post pairs yet.</div>'}
+
+      <p class="section-h">All graded submissions</p>
+      <table class="subs">
+        <thead><tr><th>Name</th><th>Phase</th><th>Score</th><th>%</th><th>Date</th></tr></thead>
+        <tbody>
+          ${graded.map((s,i) => `
+            <tr data-idx="${i}">
+              <td>${escapeHtml(s.name)}</td>
+              <td>${s.phase === 'post' ? 'Post' : 'Pre'}</td>
+              <td>${s.total}/${s.maxTotal}</td>
+              <td>${s.pct}%</td>
+              <td>${new Date(s.date).toLocaleDateString()}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div id="sub-detail"></div>
+    `;
+
+    async function runGrading(ids, btnEl){
+      const statusEl = document.getElementById('grade-status');
+      if(btnEl){ btnEl.disabled = true; btnEl.textContent = 'Marking…'; }
+      if(statusEl){ statusEl.textContent = `Marking ${ids.length} submission(s)…`; statusEl.className = 'status'; }
+      try{
+        if(ids.length > 1){
+          await apiPost('gradeAll', {});
+        } else {
+          await apiPost('gradeSubmission', { id: ids[0] });
+        }
+      }catch(e){
+        if(statusEl){ statusEl.textContent = 'Marking failed — check your Apps Script and API key.'; statusEl.className = 'status err'; }
+      }
+      loadResults();
+    }
+    const gradeAllBtn = document.getElementById('grade-all-btn');
+    if(gradeAllBtn) gradeAllBtn.addEventListener('click', () => runGrading(pending.map(p => p.id), gradeAllBtn));
+    document.querySelectorAll('.grade-one-btn').forEach(b => {
+      b.addEventListener('click', () => runGrading([b.dataset.id], b));
+    });
+
+    el.querySelectorAll('tr[data-idx]').forEach(row => {
+      row.addEventListener('click', () => {
+        const s = graded[Number(row.dataset.idx)];
+        document.getElementById('sub-detail').innerHTML = `
+          <div class="detail-block">
+            <strong>${escapeHtml(s.name)}</strong> — ${s.total}/${s.maxTotal} (${s.pct}%)
+            ${(s.breakdown||[]).map(b => `
+              <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--rule);">
+                <div style="font-size:0.85rem;"><strong>${b.n}.</strong> ${escapeHtml(b.question)} — <span style="color:var(--rust);">${b.score}/${b.max}</span></div>
+                <div style="font-size:0.82rem; color:var(--ink-soft); margin-top:2px;">${escapeHtml(b.answer||'(blank)')}</div>
+                <div class="mark-note" style="margin-top:4px;">${escapeHtml(b.note||'')}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      });
+    });
+  }catch(e){
+    el.innerHTML = '<div class="empty">Could not load submissions. Check your Apps Script URL.</div>';
+  }
+}
+
+async function loadDashboard(){
+  const el = document.getElementById('dashboard-body');
+  el.innerHTML = '<div class="empty">Loading dashboard…</div>';
+  try{
+    const subsRes = await apiGet('listSubmissions');
+    const allSubs = (subsRes && subsRes.value) || [];
+    const subs = allSubs.filter(s => s.status === 'graded');
+
+    const attRes = await apiGet('listAttendance');
+    const attendance = (attRes && attRes.value) || [];
+
+    if(subs.length === 0){
+      el.innerHTML = '<div class="empty">No graded test data yet.</div>';
+      return;
+    }
+
+    const byName = {};
+    subs.forEach(s => {
+      const key = s.name.trim().toLowerCase();
+      if(!byName[key]) byName[key] = { name: s.name, pre: null, post: null };
+      const phase = s.phase || 'pre';
+      if(!byName[key][phase] || new Date(s.date) > new Date(byName[key][phase].date)){
+        byName[key][phase] = s;
+      }
+    });
+    const people = Object.values(byName);
+    const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+    const avgPre = avg(people.filter(p=>p.pre).map(p=>Number(p.pre.pct)));
+    const avgPost = avg(people.filter(p=>p.post).map(p=>Number(p.post.pct)));
+    const avgChange = avg(people.filter(p=>p.pre&&p.post).map(p=>Number(p.post.pct)-Number(p.pre.pct)));
+
+    const sessions = [...new Set(attendance.map(a => a.session))];
+    const attByName = {};
+    attendance.forEach(a => {
+      const key = a.name.trim().toLowerCase();
+      if(!attByName[key]) attByName[key] = { present: 0, total: 0 };
+      attByName[key].total += 1;
+      if(a.present) attByName[key].present += 1;
+    });
+
+    const qStats = {};
+    subs.forEach(s => {
+      (s.breakdown||[]).forEach(b => {
+        if(!qStats[b.n]) qStats[b.n] = { sum:0, max:0, question:b.question };
+        qStats[b.n].sum += Number(b.score)||0;
+        qStats[b.n].max += Number(b.max)||1;
+      });
+    });
+    const qList = Object.keys(qStats).map(n => {
+      const q = qStats[n];
+      return { n, question:q.question, pct: q.max ? Math.round((q.sum/q.max)*100) : 0 };
+    }).sort((a,b)=>a.pct-b.pct);
+    const weakest = qList.slice(0,8);
+
+    const statCards = `
+      <div class="stat-cards">
+        <div class="stat-card"><div class="num">${avgPre!==null?avgPre+'%':'—'}</div><div class="lbl">Average pre-test score</div></div>
+        <div class="stat-card"><div class="num">${avgPost!==null?avgPost+'%':'—'}</div><div class="lbl">Average post-test score</div></div>
+        <div class="stat-card"><div class="num">${avgChange!==null?(avgChange>0?'+':'')+avgChange+'pts':'—'}</div><div class="lbl">Average improvement</div></div>
+      </div>
+    `;
+    const weakestBars = weakest.map(q => `
+      <div class="bar-row">
+        <div class="bar-label"><span>Q${q.n}. ${escapeHtml(q.question.length>46?q.question.slice(0,46)+'…':q.question)}</span><span>${q.pct}%</span></div>
+        <div class="bar-track"><div class="bar-fill ${q.pct<50?'weak':''}" style="width:${q.pct}%"></div></div>
+      </div>
+    `).join('');
+
+    const studentRows = people.map(p => {
+      const key = p.name.trim().toLowerCase();
+      const att = attByName[key];
+      const attPct = (att && sessions.length) ? Math.round((att.present/sessions.length)*100) : null;
+      const prePct = p.pre ? Number(p.pre.pct) : null;
+      const postPct = p.post ? Number(p.post.pct) : null;
+      let diff = '—';
+      if(prePct!==null && postPct!==null){
+        const d = postPct-prePct;
+        diff = `<span class="${d>0?'improve-up':d<0?'improve-down':'improve-flat'}">${d>0?'+':''}${d}pts</span>`;
+      }
+      return `<tr><td>${escapeHtml(p.name)}</td><td>${prePct!==null?prePct+'%':'—'}</td><td>${postPct!==null?postPct+'%':'—'}</td><td>${diff}</td><td>${attPct!==null?attPct+'%':'—'}</td></tr>`;
+    }).join('');
+
+    el.innerHTML = `
+      ${statCards}
+      <p class="section-h">Questions students find hardest</p>
+      ${weakestBars || '<div class="empty">Not enough data yet.</div>'}
+      <p class="section-h" style="margin-top:26px;">Students: score and attendance</p>
+      <table class="improve-table">
+        <thead><tr><th>Name</th><th>Pre</th><th>Post</th><th>Change</th><th>Attendance</th></tr></thead>
+        <tbody>${studentRows}</tbody>
+      </table>
+      ${sessions.length===0 ? '<p style="color:var(--ink-soft); font-size:0.84rem;">Attendance % will appear once you record at least one session.</p>' : ''}
+    `;
+  }catch(e){
+    el.innerHTML = '<div class="empty">Could not load the dashboard.</div>';
+  }
+}
+
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('section.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'results') loadResults();
+    if(btn.dataset.tab === 'attendance') loadRoster();
+    if(btn.dataset.tab === 'dashboard') loadDashboard();
+  });
+});
+
+const sessionDateInput = document.getElementById('session-date');
+if(sessionDateInput) sessionDateInput.value = new Date().toISOString().slice(0,10);
+
+loadAnswerKey();
+renderTestForm();
+</script>
+</body>
+</html>
